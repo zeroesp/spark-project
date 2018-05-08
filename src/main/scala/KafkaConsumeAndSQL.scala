@@ -13,8 +13,8 @@ case class Apt(year_month : String, reg_cd : String, reg_nm : String, dong_nm : 
 
 object KafkaConsumeAndSQL {
   def main(args: Array[String]): Unit ={
-    //Conf, Context
-    val sparkConf = new SparkConf().setAppName("KafkacConsumer").setMaster(args(0))
+    //Conf, Context (bind exception > bindAddress set)
+    val sparkConf = new SparkConf().setAppName("KafkacConsumer").setMaster(args(0)).set("spark.driver.bindAddress", "127.0.0.1")
     val streamingContext = new StreamingContext(sparkConf, Seconds(10))
 
     //sql context
@@ -52,15 +52,22 @@ object KafkaConsumeAndSQL {
       println("== apt_table")
       sqlContext.sql("select * from apt_table").collect().foreach(println)
 
-      println("== space ~80")
-      sqlContext.sql("select year_month, reg_nm, dong_nm, apart, space, price from apt_table where space < 80").collect().foreach(println)
+      println("== space 20/30/40 ")
+      sqlContext.sql(
+        "select year_month, reg_cd, reg_nm, " +
+        " case when space>=66.12 and space<99.17 then 20" +
+        " when space>=99.17 and space<132.23 then 30" +
+        " else 40 end as area" +
+        " ,count(*) as count, round(avg(price),2) as avg_price, min(price) as min_price, max(price) as max_price " +
+        "from apt_table " +
+        "group by year_month, reg_cd, reg_nm, " +
+        "case when space>=66.12 and space<99.17 then 20" +
+        " when space>=99.17 and space<132.23 then 30" +
+        " else 40 end"
+      ).collect().foreach(println)
 
-      println("== space 80~100")
-      sqlContext.sql("select year_month, reg_nm, dong_nm, apart, space, price from apt_table where space >= 80 and space < 100").collect().foreach(println)
-
-      println("== space 100~")
-      sqlContext.sql("select year_month, reg_nm, dong_nm, apart, space, price from apt_table where space >= 100").collect().foreach(println)
-
+      //println("== space 80~100")
+      //sqlContext.sql("select year_month, reg_nm, space, price from apt_table where space >= 80 and space < 100").collect().foreach(println)
     })
     //logic end
 
