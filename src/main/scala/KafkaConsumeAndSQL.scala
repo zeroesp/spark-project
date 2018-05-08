@@ -42,30 +42,32 @@ object KafkaConsumeAndSQL {
       Subscribe[String, String](topics, kafkaParams)
     )
 
-    kafkaStream.foreachRDD(rdd => {
+    kafkaStream.foreachRDD(rdd => {$
       println("* RDD size = " + rdd.count())
 
       rdd.map(s => s.value().split("\\|"))
         .map(s => Apt(s(0), s(1), s(2), s(3), s(4), s(5).toFloat, s(6).replace(",","").toFloat, s(7), s(8), s(9), s(10), s(11), s(12), s(13)))
         .toDF().createOrReplaceTempView("apt_table")
 
-      println("== apt_table")
-      sqlContext.sql("select * from apt_table").collect().foreach(println)
-
-      println("== space 20/30/40 ")
+      println("== space 10/20/30/40 ")
       sqlContext.sql(
         "select year_month, reg_cd, reg_nm, " +
-        " case when space>=66.12 and space<99.17 then 20" +
+        " case when space<66.12 then 10" +
+        " when space>=66.12 and space<99.17 then 20" +
         " when space>=99.17 and space<132.23 then 30" +
-        " else 40 end as area" +
+        " when space>=132.23 then 40 end as area" +
         " ,count(*) as count, round(avg(price),2) as avg_price, min(price) as min_price, max(price) as max_price " +
         "from apt_table " +
         "group by year_month, reg_cd, reg_nm, " +
-        "case when space>=66.12 and space<99.17 then 20" +
+        "case when space<66.12 then 10" +
+        " when space>=66.12 and space<99.17 then 20" +
         " when space>=99.17 and space<132.23 then 30" +
-        " else 40 end"
+        " when space>=132.23 then 40 end " +
+        "order by 1,2,4"
       ).collect().foreach(println)
 
+      //println("== apt_table")
+  //sqlContext.sql("select * from apt_table").collect().foreach(println)
       //println("== space 80~100")
       //sqlContext.sql("select year_month, reg_nm, space, price from apt_table where space >= 80 and space < 100").collect().foreach(println)
     })
