@@ -42,7 +42,7 @@ object KafkaConsumeAndSQL {
       Subscribe[String, String](topics, kafkaParams)
     )
 
-    kafkaStream.foreachRDD(rdd => {$
+    kafkaStream.foreachRDD(rdd => {
       println("* RDD size = " + rdd.count())
 
       rdd.map(s => s.value().split("\\|"))
@@ -67,7 +67,7 @@ object KafkaConsumeAndSQL {
       ).collect().foreach(println)
 
       //println("== apt_table")
-  //sqlContext.sql("select * from apt_table").collect().foreach(println)
+      //sqlContext.sql("select * from apt_table").collect().foreach(println)
       //println("== space 80~100")
       //sqlContext.sql("select year_month, reg_nm, space, price from apt_table where space >= 80 and space < 100").collect().foreach(println)
     })
