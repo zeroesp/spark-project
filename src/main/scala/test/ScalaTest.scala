@@ -18,13 +18,27 @@ object ScalaTest {
     //substring
     var str = "test"
     try {
-      print("str.length() : " + str.length() + "\n")
-      print(str.substring(0,2) + "\n")
-      print(str.substring(2,str.length()) + "\n")
+      println("str.length() : " + str.length())
+      println(str.substring(0,2))
+      println(str.substring(2,str.length()))
     } catch {
       case e: Exception => {
         println("substring err" + e)
       }
     }
+
+    val tableFullName = "jdbc:mysql://10.178.50.88:3306/test"
+    val tableNameInfo = tableFullName.split('/')
+    val tableSchema = if (tableNameInfo.length > 1) {
+      tableNameInfo(tableNameInfo.length-1)
+    } else {
+      null
+    }
+
+    println(tableFullName)
+    println(tableNameInfo(0))
+    println(tableSchema)
+
+
   }
 }
