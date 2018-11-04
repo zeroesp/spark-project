@@ -19,9 +19,9 @@ object DstreamTransformOp extends Serializable {
     sparkConf.set("spark.driver.allowMultipleContexts", "true")
     sparkConf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
 
-    val streamingContext = new StreamingContext(sparkConf, Seconds(5))
+    val streamingContext = new StreamingContext(sparkConf, Seconds(10))
     //sql context
-    val session = SparkSession.builder().appName("sqlTest").enableHiveSupport().getOrCreate()
+    val session = SparkSession.builder().appName("sqlTest").getOrCreate()
     //DF transform
     import session.implicits._
 
@@ -126,7 +126,7 @@ object DstreamTransformOp extends Serializable {
     })
 
     //-----processing
-    val pStream: DStream[String] = rStream.transformWith(eStream, (rRdd: RDD[String],eRdd: RDD[String]) => {
+    val pStream: DStream[String] = rStream.window(Seconds(600)).transformWith(eStream, (rRdd: RDD[String],eRdd: RDD[String]) => {
       val test = eRdd.collect()
       rRdd.filter(f => {
         var res = false
@@ -144,8 +144,12 @@ object DstreamTransformOp extends Serializable {
         val df = session.read.json(r).toDF
         df.printSchema()
         df.createOrReplaceTempView("stream")
-        val sql = session.sql("select host, count(cnt), max(cnt), min(cnt), avg(cnt) from stream group by host").toJSON.rdd
-        sql
+        val sql = session.sql("select host, count(cnt) count, max(cnt) max, min(cnt) min, avg(cnt) avg, stddev(cnt) std, max(cnt)-min(cnt) range, " +
+          "percentile_approx(cnt,0.25) pa25, percentile_approx(cnt,0.5) pa50, percentile_approx(cnt,0.75) pa75, " +
+          "percentile(cnt,0.25) p25, percentile(cnt,0.5) p50, percentile(cnt,0.75) p75 " +
+          "from stream group by host")
+        sql.show
+        sql.toJSON.rdd
       }else {
         r
       }
