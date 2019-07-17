@@ -126,7 +126,7 @@ object DstreamTransformOp extends Serializable {
     })
 
     //-----processing
-    val pStream: DStream[String] = rStream.window(Seconds(600)).transformWith(eStream, (rRdd: RDD[String],eRdd: RDD[String]) => {
+    val pStream: DStream[String] = rStream.window(Seconds(1200)).transformWith(eStream, (rRdd: RDD[String],eRdd: RDD[String]) => {
       val test = eRdd.collect()
       rRdd.filter(f => {
         var res = false
